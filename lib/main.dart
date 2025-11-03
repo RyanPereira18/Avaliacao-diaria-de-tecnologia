@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'home_screen.dart';
+// 1. Importa a nova tela de login
+import 'login_screen.dart';
+// import 'home_screen.dart'; // Este import não é mais necessário aqui
 
 void main() {
   runApp(const MyApp());
@@ -16,9 +18,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueAccent),
         useMaterial3: true,
         inputDecorationTheme: InputDecorationTheme(
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12.0),
-          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0)),
           filled: true,
           fillColor: Colors.grey[100],
         ),
@@ -35,7 +35,8 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const HomeScreen(), 
+      // 2. Aponta o 'home' para a LoginScreen
+      home: const LoginScreen(),
     );
   }
 }
