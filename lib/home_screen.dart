@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'quiz_screen.dart';
+import 'main.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -18,34 +20,81 @@ class _HomeScreenState extends State<HomeScreen> {
   final Map<String, bool> _dispositivos = {
     'Smartphone': false,
     'Notebook/PC': false,
-
     'Tablet': false,
     'Smartwatch': false,
   };
 
   bool _aceitaNotificacoes = false;
   double _horasEstudo = 1.0;
+  bool _isLoading = false;
 
-  void _submitForm() {
+  Future<void> _submitForm() async {
     if (_formKey.currentState!.validate()) {
       if (_selectedGenero == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Por favor, selecione seu gênero.'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        _showError('Por favor, selecione seu gênero.');
         return;
       }
 
       _formKey.currentState!.save();
+      setState(() {
+        _isLoading = true;
+      });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Obrigado, $_nome! Formulário enviado com sucesso!'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      final userId = supabase.auth.currentUser?.id;
+      if (userId == null) {
+        _showError('Usuário não logado. Tente novamente.');
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+
+      final Map<String, dynamic> dispositivosJson =
+          Map<String, dynamic>.from(_dispositivos);
+
+      final formData = {
+        'user_id': userId,
+        'nome': _nome,
+        'faixa_etaria': _selectedFaixaEtaria,
+        'genero': _selectedGenero,
+        'dispositivos': dispositivosJson,
+        'aceita_notificacoes': _aceitaNotificacoes,
+        'horas_estudo': _horasEstudo,
+      };
+
+      try {
+        await supabase.from('formularios').insert(formData);
+
+        if (mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const QuizScreen()),
+          );
+        }
+      } on PostgrestException catch (e) {
+        _showError('Erro ao salvar dados: ${e.message}');
+      } catch (e) {
+        _showError('Ocorreu um erro: $e');
+      }
+
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
+    );
+  }
+  Future<void> _logout() async {
+    try {
+      await supabase.auth.signOut();
+    } on AuthException catch (e) {
+      _showError('Erro ao fazer logout: ${e.message}');
     }
   }
 
@@ -53,8 +102,15 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Formulário de Uso de Tecnologia'),
+        title: const Text('Formulário (Supabase)'),
         backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            tooltip: 'Sair',
+            onPressed: _logout,
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),
@@ -188,32 +244,12 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 30),
               Center(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    ElevatedButton(
-                      onPressed: _submitForm,
-                      child: const Text('Enviar Formulário'),
-                    ),
-                    const SizedBox(height: 12),
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const QuizScreen()),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                            Theme.of(context).colorScheme.secondary,
-                        foregroundColor:
-                            Theme.of(context).colorScheme.onSecondary,
+                child: _isLoading
+                    ? const CircularProgressIndicator()
+                    : ElevatedButton(
+                        onPressed: _submitForm,
+                        child: const Text('Salvar e Iniciar Quiz'),
                       ),
-                      child: const Text('Ir para o Quiz'),
-                    ),
-                  ],
-                ),
               ),
             ],
           ),

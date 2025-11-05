@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'home_screen.dart'; // Importa sua tela principal
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'main.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -8,152 +9,133 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _fadeAnimation;
-  late Animation<Offset> _slideAnimation;
+class _LoginScreenState extends State<LoginScreen> {
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+  bool _isLoading = false;
 
-  // Controladores para ler o texto dos campos
-  final _usuarioController = TextEditingController();
-  final _senhaController = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1800),
-    );
-
-    _fadeAnimation = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeIn,
-    );
-
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.5),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOutCubic,
-    ));
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _controller.forward();
+  Future<void> _login() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() {
+      _isLoading = true;
     });
+
+    try {
+      await supabase.auth.signInWithPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+
+    } on AuthException catch (e) {
+      _showError('Falha no login: ${e.message}');
+    } catch (e) {
+      _showError('Ocorreu um erro: $e');
+    }
+
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _register() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await supabase.auth.signUp(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+
+    } on AuthException catch (e) {
+      _showError('Falha no cadastro: ${e.message}');
+    } catch (e) {
+      _showError('Ocorreu um erro: $e');
+    }
+
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
+    );
   }
 
   @override
   void dispose() {
-    _controller.dispose();
-    // Limpa os controladores quando a tela for removida
-    _usuarioController.dispose();
-    _senhaController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
     super.dispose();
-  }
-
-  void _login() {
-    final String usuario = _usuarioController.text;
-    final String senha = _senhaController.text;
-
-    if (usuario == 'admin' && senha == 'admin') {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Usuário ou senha inválidos.'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Theme.of(context).colorScheme.primary,
-              Theme.of(context).colorScheme.primaryContainer,
-            ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-        child: Center(
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(32.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  FadeTransition(
-                    opacity: _fadeAnimation,
-                    // --- LOGO ALTERADA ---
-                    // Trocamos o FlutterLogo por um ícone de perfil
-                    child: const Icon(
-                      Icons.account_circle,
-                      size: 120, // Aumentei um pouco o tamanho
-                      color: Colors.white,
-                    ),
-                    // ---------------------
-                  ),
-                  const SizedBox(height: 40),
-                  FadeTransition(
-                    opacity: _fadeAnimation,
-                    child: SlideTransition(
-                      position: _slideAnimation,
-                      child: TextFormField(
-                        controller: _usuarioController,
-                        decoration: const InputDecoration(
-                          labelText: 'Usuário',
-                          prefixIcon: Icon(Icons.person),
-                          fillColor: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  FadeTransition(
-                    opacity: _fadeAnimation,
-                    child: SlideTransition(
-                      position: _slideAnimation,
-                      child: TextFormField(
-                        controller: _senhaController,
-                        decoration: const InputDecoration(
-                          labelText: 'Senha',
-                          prefixIcon: Icon(Icons.lock),
-                          fillColor: Colors.white,
-                        ),
-                        obscureText: true,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 30),
-                  FadeTransition(
-                    opacity: _fadeAnimation,
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
+      appBar: AppBar(title: const Text('Login / Cadastro (Supabase)')),
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24.0),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'Avaliação de Tecnologia',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.headlineMedium,
+                ),
+                const SizedBox(height: 30),
+                TextFormField(
+                  controller: _emailController,
+                  decoration: const InputDecoration(
+                      labelText: 'Email', prefixIcon: Icon(Icons.email)),
+                  keyboardType: TextInputType.emailAddress,
+                  validator: (value) =>
+                      (value == null || !value.contains('@'))
+                          ? 'Email inválido'
+                          : null,
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _passwordController,
+                  decoration: const InputDecoration(
+                      labelText: 'Senha', prefixIcon: Icon(Icons.lock)),
+                  obscureText: true,
+                  validator: (value) => (value == null || value.length < 6)
+                      ? 'Senha deve ter no mínimo 6 caracteres'
+                      : null,
+                ),
+                const SizedBox(height: 30),
+                if (_isLoading)
+                  const Center(child: CircularProgressIndicator())
+                else
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      ElevatedButton(
                         onPressed: _login,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              Theme.of(context).colorScheme.secondary,
-                          foregroundColor:
-                              Theme.of(context).colorScheme.onSecondary,
-                        ),
                         child: const Text('Entrar'),
                       ),
-                    ),
-                  ),
-                ],
-              ),
+                      const SizedBox(height: 12),
+                      OutlinedButton(
+                        onPressed: _register,
+                        child: const Text('Criar Conta'),
+                      ),
+                    ],
+                  )
+              ],
             ),
           ),
         ),
@@ -161,4 +143,3 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 }
-

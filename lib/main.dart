@@ -1,11 +1,20 @@
 import 'package:flutter/material.dart';
-// 1. Importa a nova tela de login
-import 'login_screen.dart';
-// import 'home_screen.dart'; // Este import não é mais necessário aqui
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'supabase_credentials.dart';
+import 'auth_wrapper.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Supabase.initialize(
+    url: supabaseUrl,
+    anonKey: supabaseAnonKey,
+  );
+
   runApp(const MyApp());
 }
+
+final supabase = Supabase.instance.client;
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -18,7 +27,9 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueAccent),
         useMaterial3: true,
         inputDecorationTheme: InputDecorationTheme(
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0)),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12.0),
+          ),
           filled: true,
           fillColor: Colors.grey[100],
         ),
@@ -35,8 +46,7 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
-      // 2. Aponta o 'home' para a LoginScreen
-      home: const LoginScreen(),
+      home: const AuthWrapper(),
     );
   }
 }
