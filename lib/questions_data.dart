@@ -11,6 +11,8 @@ const List<QuizQuestion> questions = [
       'Um tipo de exercício físico para quem usa o PC.'
     ],
     correctOptionIndex: 1,
+    explanation:
+        'Phishing é um tipo de fraude online onde golpistas tentam "pescar" (fish) suas informações pessoais, como senhas e dados de cartão, fingindo ser uma empresa legítima.',
   ),
   // 2. Saúde Digital
   QuizQuestion(
@@ -23,6 +25,8 @@ const List<QuizQuestion> questions = [
       'Olhos secos ou irritados.'
     ],
     correctOptionIndex: 2,
+    explanation:
+        'A luz azul emitida por telas pode suprimir a melatonina (hormônio do sono), causando dificuldade para dormir e cansaço pela manhã, e não um aumento de disposição.',
   ),
   // 3. Produtividade
   QuizQuestion(
@@ -35,6 +39,8 @@ const List<QuizQuestion> questions = [
       'Fazer pausas apenas quando terminar todo o conteúdo.'
     ],
     correctOptionIndex: 1,
+    explanation:
+        'O "Modo Foco" é projetado especificamente para silenciar notificações e bloquear aplicativos que causam distração, ajudando a manter a concentração na tarefa principal.',
   ),
   // 4. Segurança
   QuizQuestion(
@@ -46,6 +52,8 @@ const List<QuizQuestion> questions = [
       'Um login que expira em dois minutos.'
     ],
     correctOptionIndex: 1,
+    explanation:
+        'O 2FA adiciona uma segunda etapa de verificação (Fator 2), geralmente um código enviado para seu celular ou gerado por um app, tornando muito mais difícil para alguém invadir sua conta.',
   ),
   // 5. Rastro Digital
   QuizQuestion(
@@ -57,6 +65,8 @@ const List<QuizQuestion> questions = [
       'O histórico do navegador que só você pode ver.'
     ],
     correctOptionIndex: 1,
+    explanation:
+        'Seu rastro digital é a soma de todas as suas atividades online, incluindo posts em redes sociais, histórico de buscas, curtidas e até dados de localização. Isso forma sua "identidade" online.',
   ),
   // 6. Produtividade
   QuizQuestion(
@@ -69,6 +79,8 @@ const List<QuizQuestion> questions = [
       'Usar um cronômetro de tomate na mesa.'
     ],
     correctOptionIndex: 2,
+    explanation:
+        'A técnica clássica envolve 25 minutos de trabalho focado (um "pomodoro") seguidos por uma pausa de 5 minutos, ajudando a combater a fadiga mental.',
   ),
   // 7. Saúde Digital
   QuizQuestion(
@@ -80,6 +92,8 @@ const List<QuizQuestion> questions = [
       'Um software de economia de energia.'
     ],
     correctOptionIndex: 2,
+    explanation:
+        'Ergonomia é sobre adaptar seu ambiente (altura da cadeira, posição do monitor, tipo de mouse) ao seu corpo, para prevenir lesões e aumentar o conforto durante o uso.',
   ),
   // 8. Segurança
   QuizQuestion(
@@ -88,11 +102,11 @@ const List<QuizQuestion> questions = [
       'senha1234',
       'JoaoSilva1990',
       '12345678',
-      // ****** CORREÇÃO APLICADA AQUI ******
-      // Adicionamos a \ para escapar o $
       'R\$t9!kZ@pQ_7f'
     ],
     correctOptionIndex: 3,
+    explanation:
+        'Uma senha segura é longa e complexa, misturando letras maiúsculas, minúsculas, números e símbolos. As outras opções são muito fáceis de adivinhar.',
   ),
   // 9. Digital Literacy
   QuizQuestion(
@@ -104,6 +118,8 @@ const List<QuizQuestion> questions = [
       'Um aplicativo de mensagens criptografadas.'
     ],
     correctOptionIndex: 0,
+    explanation:
+        'Malware é a abreviação de "Malicious Software" (Software Malicioso). É um termo que engloba qualquer programa feito para danificar ou infiltrar-se em um sistema, como vírus, spyware, ransomware, etc.',
   ),
   // 10. Digital Literacy
   QuizQuestion(
@@ -116,5 +132,7 @@ const List<QuizQuestion> questions = [
       'Apenas curtir, mas não compartilhar.'
     ],
     correctOptionIndex: 1,
+    explanation:
+        'Para combater a desinformação (fake news), é crucial sempre verificar a fonte, o autor e a data da notícia em veículos de imprensa confiáveis antes de acreditar ou compartilhar.',
   ),
 ];

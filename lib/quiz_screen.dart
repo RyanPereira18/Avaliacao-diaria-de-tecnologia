@@ -1,8 +1,6 @@
-// lib/quiz_screen.dart
-
 import 'package:flutter/material.dart';
-import 'questions_data.dart'; // Importa nossa lista de perguntas
-import 'result_screen.dart'; // --- IMPORTA A NOVA TELA ---
+import 'questions_data.dart';
+import 'result_screen.dart';
 
 class QuizScreen extends StatefulWidget {
   const QuizScreen({super.key});
@@ -14,7 +12,6 @@ class QuizScreen extends StatefulWidget {
 class _QuizScreenState extends State<QuizScreen> {
   int _currentQuestionIndex = 0;
   late List<int?> _selectedAnswers;
-  // int _score = 0; // Não precisamos mais calcular o score aqui
 
   @override
   void initState() {
@@ -45,10 +42,7 @@ class _QuizScreenState extends State<QuizScreen> {
       });
     }
   }
-
-  // --- FUNÇÃO FINALIZAR QUIZ (ATUALIZADA) ---
   void _finishQuiz() {
-    // Verifica a resposta da última pergunta
     if (_selectedAnswers[_currentQuestionIndex] == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -59,8 +53,6 @@ class _QuizScreenState extends State<QuizScreen> {
       return;
     }
 
-    // Navega para a tela de resultados
-    // Usamos pushReplacement para que o usuário não possa "voltar" para o quiz
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
         builder: (ctx) => ResultScreen(
@@ -106,7 +98,7 @@ class _QuizScreenState extends State<QuizScreen> {
               child: ElevatedButton(
                 onPressed: _currentQuestionIndex < questions.length - 1
                     ? _nextQuestion
-                    : _finishQuiz, // Chama a nova função _finishQuiz
+                    : _finishQuiz,
                 style: ElevatedButton.styleFrom(
                   padding:
                       const EdgeInsets.symmetric(vertical: 16, horizontal: 40),

@@ -1,4 +1,6 @@
 class QuizQuestion {
+  final String explanation;
+
   final String questionText;
   final List<String> options;
   final int correctOptionIndex;
@@ -7,5 +9,6 @@ class QuizQuestion {
     required this.questionText,
     required this.options,
     required this.correctOptionIndex,
+    required this.explanation,
   });
 }
