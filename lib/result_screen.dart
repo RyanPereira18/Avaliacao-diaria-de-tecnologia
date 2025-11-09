@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart'; // Importa Supabase
+import 'package:http/http.dart' as http;
+import 'dart:math'; 
 import 'quiz_question_model.dart';
 import 'review_screen.dart';
-import 'main.dart'; // Importa o atalho 'supabase'
+import 'main.dart';
+import 'pokemon_model.dart'; 
 
 class ResultScreen extends StatefulWidget {
   final List<QuizQuestion> questions;
@@ -20,16 +22,21 @@ class ResultScreen extends StatefulWidget {
 
 class _ResultScreenState extends State<ResultScreen> {
   int _correctAnswersCount = 0;
-  bool _isSaving = false;
+  bool _isSavingResult = false;
+
+  Pokemon? _rewardPokemon; 
+  bool _isLoadingReward = true;
+  String _pokemonError = '';
 
   @override
   void initState() {
     super.initState();
     _calculateAndSaveResult();
+    _fetchRandomPokemonReward();
   }
 
   Future<void> _calculateAndSaveResult() async {
-    setState(() { _isSaving = true; });
+    setState(() { _isSavingResult = true; });
 
     int correctCount = 0;
     for (int i = 0; i < widget.questions.length; i++) {
@@ -43,7 +50,7 @@ class _ResultScreenState extends State<ResultScreen> {
 
     final userId = supabase.auth.currentUser?.id;
     if (userId == null) {
-      setState(() { _isSaving = false; });
+      setState(() { _isSavingResult = false; });
       return;
     }
 
@@ -56,23 +63,50 @@ class _ResultScreenState extends State<ResultScreen> {
 
     try {
       await supabase.from('resultados_quiz').insert(quizResultData);
-    } on PostgrestException catch (e) {
-      // ****** CORREÇÃO 1 APLICADA AQUI ******
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao salvar resultado: ${e.message}'), backgroundColor: Colors.red),
-        );
-      }
     } catch (e) {
-      // ****** CORREÇÃO 2 APLICADA AQUI ******
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ocorreu um erro: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('Erro ao salvar resultado: $e'), backgroundColor: Colors.red),
         );
       }
     }
+    // ----------------------------
     
-    setState(() { _isSaving = false; });
+    setState(() { _isSavingResult = false; });
+  }
+
+  Future<void> _fetchRandomPokemonReward() async {
+    try {
+      final response = await http
+          .get(Uri.parse('https://www.canalti.com.br/api/pokemons.json'));
+
+      if (response.statusCode == 200) {
+        final List<Pokemon> fetchedPokemons = parsePokemons(response.body);
+
+        if (fetchedPokemons.isNotEmpty) {
+          final int totalPokemons = fetchedPokemons.length;
+          final int randomIndex = Random().nextInt(totalPokemons);
+
+          setState(() {
+            _rewardPokemon = fetchedPokemons[randomIndex];
+            _isLoadingReward = false;
+          });
+        } else {
+          _showPokemonError('A API não retornou Pokémons.');
+        }
+      } else {
+        _showPokemonError('Falha ao carregar: ${response.statusCode}');
+      }
+    } catch (e) {
+      _showPokemonError('Erro de conexão: $e');
+    }
+  }
+  
+  void _showPokemonError(String message) {
+     setState(() {
+        _pokemonError = message;
+        _isLoadingReward = false;
+      });
   }
 
   @override
@@ -89,44 +123,83 @@ class _ResultScreenState extends State<ResultScreen> {
           padding: const EdgeInsets.all(20.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
                 'Parabéns!',
                 style: Theme.of(context).textTheme.headlineMedium,
               ),
               const SizedBox(height: 20),
-              
-              if (_isSaving)
-                const Column(
-                  children: [
-                    CircularProgressIndicator(),
-                    SizedBox(height: 20),
-                    Text('Salvando seu resultado...'),
-                  ],
-                )
+              if (_isSavingResult)
+                const Center(heightFactor: 3, child: Text('Salvando placar...'))
               else
-                Column(
-                  children: [
-                    Text(
-                      'Você acertou',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    Text(
-                      '$_correctAnswersCount / $totalQuestions',
-                      style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                            color: Theme.of(context).colorScheme.primary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
-                  ],
+                Text(
+                  '$_correctAnswersCount / $totalQuestions',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
+              const SizedBox(height: 30),
               
-              const SizedBox(height: 40),
+              Text(
+                'Seu prêmio aleatório é:',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 20),
               
+              if (_isLoadingReward)
+                const Center(child: CircularProgressIndicator())
+              else if (_pokemonError.isNotEmpty)
+                Center(child: Text(_pokemonError, style: const TextStyle(color: Colors.red)))
+              else if (_rewardPokemon != null)
+                Card(
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Row(
+                      children: [
+                        Image.network(
+                          _rewardPokemon!.img,
+                          width: 80,
+                          height: 80,
+                          fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) => 
+                            const Icon(Icons.error, size: 80),
+                        ),
+                        const SizedBox(width: 20),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _rewardPokemon!.name,
+                                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 5),
+                              Text(
+                                _rewardPokemon!.type.join(', '),
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                
+              const Spacer(), 
+
               ElevatedButton.icon(
                 icon: const Icon(Icons.reviews),
                 label: const Text('Mostrar Respostas'),
-                onPressed: _isSaving ? null : () {
+                onPressed: _isSavingResult ? null : () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -137,7 +210,7 @@ class _ResultScreenState extends State<ResultScreen> {
                   );
                 },
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 12),
               TextButton(
                 onPressed: () {
                   Navigator.popUntil(context, (route) => route.isFirst);
