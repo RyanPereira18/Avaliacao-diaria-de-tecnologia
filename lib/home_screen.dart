@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'quiz_screen.dart';
 import 'main.dart';
+import 'settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -90,25 +91,23 @@ class _HomeScreenState extends State<HomeScreen> {
       SnackBar(content: Text(message), backgroundColor: Colors.red),
     );
   }
-  Future<void> _logout() async {
-    try {
-      await supabase.auth.signOut();
-    } on AuthException catch (e) {
-      _showError('Erro ao fazer logout: ${e.message}');
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Formulário'),
-        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+        backgroundColor: Theme.of(context).colorScheme.primary,
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: 'Sair',
-            onPressed: _logout,
+            icon: const Icon(Icons.settings),
+            tooltip: 'Configurações',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsScreen()),
+              );
+            },
           ),
         ],
       ),
